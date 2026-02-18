@@ -1,5 +1,4 @@
 # YOLO Label Generator from Masks
-
 This project provides a Jupyter notebook-based pipeline to automatically generate YOLO-format annotation files (`.txt`) from binary segmentation masks and their corresponding images. It is designed to work with any kind of dataset, not limited to medical or skin-related imagery.
 
 ## 📌 Features
