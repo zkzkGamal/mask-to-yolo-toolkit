@@ -1,2 +1,4 @@
 dataset/
 data.yaml
+labels/
+masks_v2/
