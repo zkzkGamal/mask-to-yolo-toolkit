@@ -10,16 +10,16 @@ except FileNotFoundError:
 
 setup(
     name="segment_toolkit",
-    version="1.0.1",
+    version="1.0.2",
     description="A Python toolkit to convert between binary segmentation masks and YOLO labels",
     long_description=long_description,
     long_description_content_type="text/markdown",
     author="Zakria Gamal",
     author_email="zekogml11@gmail.com",
-    url="https://github.com/zkzkGamal/LabelFile-for-yoloModel",
+    url="https://github.com/zkzkGamal/mask-to-yolo-toolkit",
     project_urls={
-        "Source Code": "https://github.com/zkzkGamal/LabelFile-for-yoloModel",
-        "Bug Tracker": "https://github.com/zkzkGamal/LabelFile-for-yoloModel/issues",
+        "Source Code": "https://github.com/zkzkGamal/mask-to-yolo-toolkit",
+        "Bug Tracker": "https://github.com/zkzkGamal/mask-to-yolo-toolkit/issues",
     },
     packages=find_packages(),
     install_requires=[

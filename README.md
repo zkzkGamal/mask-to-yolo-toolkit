@@ -32,7 +32,7 @@ If you want to clone the repository for local development, run:
 
 ```bash
 # Clone the repository
-git clone https://github.com/zkzkGamal/LabelFile-for-yoloModel.git
+git clone https://github.com/zkzkGamal/mask-to-yolo-toolkit.git
 
 # Navigate into the project folder
 cd LabelFile-for-yoloModel
