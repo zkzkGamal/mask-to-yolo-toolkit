@@ -10,7 +10,7 @@ except FileNotFoundError:
 
 setup(
     name="segment_toolkit",
-    version="1.0.2",
+    version="1.0.3",
     description="A Python toolkit to convert between binary segmentation masks and YOLO labels",
     long_description=long_description,
     long_description_content_type="text/markdown",
