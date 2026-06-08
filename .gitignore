@@ -1,4 +1,24 @@
+# Dataset and generated folders
 dataset/
 data.yaml
 labels/
 masks_v2/
+validate_data/
+
+# Python Build & Distribution artifacts
+build/
+dist/
+*.egg-info/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# IDEs and Editors
+.vscode/
+.idea/
+.ipynb_checkpoints/
+
+# Virtual Environments
+.venv/
+venv/
+env/

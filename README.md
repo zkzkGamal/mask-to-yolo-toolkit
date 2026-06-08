@@ -1,274 +1,198 @@
-# YOLO Label Processing and Visualization Pipeline
-This project provides a comprehensive Jupyter notebook-based pipeline for working with YOLO format annotations and their corresponding images. It consists of two main workflows:
+# Segment Toolkit 🛠️
 
-1. **Forward Pipeline** (`segment_with_preprocess_v2.ipynb`): Generate YOLO labels from binary segmentation masks
-2. **Reverse Pipeline** (`convert_label_to_mask.ipynb`): Convert YOLO labels back to binary masks for visualization and validation
+A modern, robust, and premium Python package designed to bridge the gap between pixel-level **binary segmentation masks** and **YOLO bounding box labels**. It provides a bidirectional pipeline with exception handling, extensive logging, a command-line interface (CLI), and a Python API.
+
+---
 
 ## 📌 Features
 
-- **Forward Direction**: Automatically detects object regions in masks and converts to YOLO format
-  - Extracts bounding boxes from binary segmentation masks
-  - Normalizes coordinates to YOLO format: `<class_id> <center_x> <center_y> <width> <height>`
-  - Outputs YOLO `.txt` label files
+- **Bidirectional Conversion**:
+  - **Forward Pipeline**: Convert binary masks to YOLO format labels (supports standard axis-aligned or advanced minimum area rotated bounding boxes).
+  - **Reverse Pipeline**: Reconstruct binary masks from YOLO labels.
+- **Automatic Dependency Installer**: Missing required packages (`numpy`, `opencv-python`, `pillow`, `pandas`, `matplotlib`) are automatically detected and installed via `pip` upon package import or script execution.
+- **Robust Exception Handling**: Try-catch blocks wrapped around file I/O, contour finding, and resizing to prevent application crashes on corrupted or missing files.
+- **Dynamic Dataset Matching**: Read classification mappings (in **CSV** or **JSON** format) to automatically assign multi-class IDs matching standard dataset schemas (like the ISIC dataset).
+- **YOLO Dataset Splitting**: Automatically shuffles and partitions images & labels into training and testing sets with customizable split ratios, creating standard `data.yaml` configs.
+- **Overlay Visualizer**: Overlay bounding boxes and class indicators directly onto source images for annotation inspection.
+- **Dual Interface**: Use as a command-line application (`segment-toolkit`) or import as a Python library (`import segment_toolkit`).
 
-- **Reverse Direction**: Visualize and validate YOLO annotations
-  - Converts YOLO labels back to binary segmentation masks
-  - Overlays bounding boxes on original images for verification
-  - Identifies annotation errors early in the pipeline
+---
 
-- Supports multi-class classification with class IDs
-- Dataset-agnostic – works with medical, industrial, satellite imagery, etc.
-- Includes comprehensive error logging and validation
+## 📂 Installation
 
-## 📂 Project Structure
+To install the toolkit locally in editable mode (missing dependencies will install automatically):
 
-```
-LabelFile-for-yoloModel/
-├── images/                              # Original images for training
-├── labels/                              # YOLO format annotations (.txt files)
-├── mask/                                # Binary segmentation masks (source data)
-├── masks_v2/                            # Generated masks from YOLO labels
-├── segment_with_preprocess_v2.ipynb     # Forward pipeline: masks → YOLO labels
-├── convert_label_to_mask.ipynb          # Reverse pipeline: YOLO labels → masks + visualization
-├── GroundTruth.csv                      # Class labels for multi-class classification
-├── data.yaml                            # YOLO dataset configuration
-└── README.md                            # This file
+```bash
+pip install -e .
 ```
 
-## 📂 Input Folder Structure
+### Manual Installation
+If you prefer to install dependencies manually before installing the toolkit:
 
-Place your files in the following structure:
-
-```
-project/
-├── images/
-│   ├── image_001.jpg
-│   ├── image_002.jpg
-│   └── ...
-├── mask/                    # or masks/
-│   ├── image_001_segmentation.png
-│   ├── image_002_segmentation.png
-│   └── ...
-└── GroundTruth.csv         # For multi-class classification
+```bash
+pip install -r requirements.txt
+pip install .
 ```
 
-Ensure that mask filenames **correspond** to image filenames.
+---
 
 ## 🚀 Usage
 
-### Forward Pipeline: Masks → YOLO Labels
+### 1. Command Line Interface (CLI)
 
-Use `segment_with_preprocess_v2.ipynb` to generate YOLO labels from binary masks:
+The package installs a console script called `segment-toolkit`.
 
-1. **Preprocessing**: Resize images and masks to 640×640
-2. **Segmentation**: Extract bounding boxes from mask contours using OpenCV
-3. **Conversion**: Transform pixel coordinates to YOLO normalized format
-4. **Classification**: Assign class IDs based on `GroundTruth.csv`
-5. **Split**: Divide dataset into training (80%) and testing (20%) sets
-6. **Output**: Generate `labels/` directory with YOLO `.txt` files
+#### Convert Masks to YOLO Labels
+- **Single File Conversion**:
+  ```bash
+  segment-toolkit mask-to-yolo \
+    --image images/ISIC_0024310.jpg \
+    --mask mask/ISIC_0024310_segmentation.png \
+    --output-txt labels/ISIC_0024310.txt \
+    --class-id 4
+  ```
 
-### Reverse Pipeline: YOLO Labels → Visualization
+- **Batch Directory Conversion**:
+  ```bash
+  segment-toolkit mask-to-yolo \
+    --image-dir images/ \
+    --mask-dir mask/ \
+    --output-dir labels/ \
+    --ground-truth GroundTruth.csv
+  ```
 
-Use `convert_label_to_mask.ipynb` to validate YOLO labels:
+- **Options**:
+  - `--rotated`: Use rotated minimum area rectangles (`cv2.minAreaRect`) instead of standard axis-aligned rectangles.
+  - `--resize WIDTH HEIGHT`: Set target size for image and mask resizing (default: `640 640`).
 
-1. **Load Labels**: Read YOLO `.txt` annotation files
-2. **Denormalize**: Convert normalized coordinates to pixel space
-   - Formula: $x_{pixel} = x_{norm} \times img_{width}$
-3. **Create Masks**: Draw rectangles on binary masks
-4. **Visualize**: Overlay bounding boxes on original images
-5. **Validate**: Verify annotation accuracy before training
+#### Convert YOLO Labels to Masks
+- **Single File Conversion**:
+  ```bash
+  segment-toolkit yolo-to-mask \
+    --label labels/ISIC_0024310.txt \
+    --output-mask masks_reconstructed/ISIC_0024310_segmentation.png
+  ```
 
-### Step-by-Step Execution
+- **Batch Directory Conversion**:
+  ```bash
+  segment-toolkit yolo-to-mask \
+    --label-dir labels/ \
+    --output-dir masks_reconstructed/
+  ```
 
-**For Forward Pipeline:**
-1. Ensure your `images/` and `mask/` directories are populated
-2. Update `GroundTruth.csv` with class labels (MEL, NV, BCC, AKIEC, BKL, DF, VASC)
-3. Open `segment_with_preprocess_v2.ipynb`
-4. Run all cells in order
-5. Generated labels will appear in `labels/` directory
-
-**For Reverse Pipeline:**
-1. Ensure YOLO labels exist in `labels/` directory
-2. Open `convert_label_to_mask.ipynb`
-3. Run all cells in order
-4. Generated masks will appear in `masks_v2/` directory
-5. Images with bounding boxes will be displayed
-
-## ✅ Requirements
-
-Install the following Python packages:
-
+#### Visualize Bounding Boxes
+Draw YOLO labels on top of the original image:
 ```bash
-pip install opencv-python numpy matplotlib pillow pandas
+segment-toolkit visualize \
+  --image images/ISIC_0024310.jpg \
+  --label labels/ISIC_0024310.txt \
+  --output visualization.png
 ```
 
-To run Jupyter notebooks:
+#### Split Dataset
+Organize folders into YOLO-compliant structure (`dataset/train` and `dataset/test` splits) and output `data.yaml`:
 ```bash
-pip install notebook jupyterlab
+segment-toolkit split \
+  --images images/ \
+  --labels labels/ \
+  --output dataset/ \
+  --ratio 0.8 \
+  --seed 42
 ```
 
-### Recommended Versions
-- Python: 3.8+
-- OpenCV: 4.5+
-- NumPy: 1.19+
-- Matplotlib: 3.3+
-- Pandas: 1.2+
-## 🧠 Technical Background
+---
 
-### YOLO Format Explanation
+### 2. Ground Truth Formats
 
-Each label file contains one line per detected object:
+The `--ground-truth` parameter in batch conversion supports both CSV and JSON formats.
 
-```
-<class_id> <x_center> <y_center> <width> <height>
-```
-
-**Key Points:**
-- All values are **normalized** between 0 and 1
-- Normalized relative to image dimensions
-- Example for 640×480 image:
-  - Object at (320, 240) with size 100×80
-  - YOLO format: `0 0.500 0.500 0.156 0.167`
-
-### Mathematical Foundations
-
-#### Normalization (Pixel → YOLO)
-$$x_{norm} = \frac{x_{pixel}}{img\_width}$$
-$$y_{norm} = \frac{y_{pixel}}{img\_height}$$
-
-#### Denormalization (YOLO → Pixel)
-$$x_{pixel} = x_{norm} \times img\_width$$
-$$y_{pixel} = y_{norm} \times img\_height$$
-
-#### Center to Bounding Box Conversion
-Given center $(x_c, y_c)$ and dimensions $(w, h)$:
-
-**Top-left corner:**
-$$x_1 = x_c - \frac{w}{2}, \quad y_1 = y_c - \frac{h}{2}$$
-
-**Bottom-right corner:**
-$$x_2 = x_c + \frac{w}{2}, \quad y_2 = y_c + \frac{h}{2}$$
-
-### Key Technologies
-
-#### OpenCV Contour Detection
-- **Purpose**: Extract object boundaries from binary masks
-- **Algorithm**: Finds contours using Moore-Neighbor tracing
-- **Benefits**: Robust to noise, handles multiple objects
-
-#### Binary Masks
-- **Format**: Grayscale PNG (0 = background, 255 = object)
-- **Advantage**: Simple, efficient, supports multiple objects per image
-- **Storage**: Compact representation compared to coordinate lists
-
-### Workflow Integration
-
-```
-Source Data
-    ↓
-[Segmentation Masks]
-    ↓
-[Extract Bounding Boxes via Contours]
-    ↓
-[Normalize Coordinates]
-    ↓
-[Assign Class IDs from Ground Truth]
-    ↓
-[Generate YOLO Labels]
-    ↓
-[Use in YOLO Training (YOLOv5, YOLOv8)]
+#### CSV Format
+Assumes the first column contains the image identifier/filename, and the subsequent columns represent binary indicator classes (where `1` indicates class presence).
+Example `GroundTruth.csv`:
+```csv
+image,MEL,NV,BCC,AKIEC,BKL,DF,VASC
+ISIC_0024306,0,1,0,0,0,0,0
+ISIC_0024310,1,0,0,0,0,0,0
 ```
 
-### Validation Workflow
+#### JSON Format
+Supports three distinct schemas:
 
+1. **Flat Dictionary (Format A)**:
+   Maps image IDs directly to class integers or class name strings.
+   ```json
+   {
+     "ISIC_0024306": 5,
+     "ISIC_0024310": "MEL"
+   }
+   ```
+
+2. **Nested Indicators (Format B)**:
+   Maps image IDs to dictionaries of binary class indicators.
+   ```json
+   {
+     "ISIC_0024306": { "MEL": 0, "NV": 1, "BCC": 0 },
+     "ISIC_0024310": { "MEL": 1, "NV": 0, "BCC": 0 }
+   }
+   ```
+
+3. **List of Records (Format C)**:
+   A list of objects containing image IDs and class descriptors.
+   ```json
+   [
+     { "image": "ISIC_0024306", "class_id": 5 },
+     { "image": "ISIC_0024310", "MEL": 1, "NV": 0 }
+   ]
+   ```
+
+*Note: Class name strings (like `"MEL"`, `"NV"`) are automatically mapped to standard ISIC IDs (`AKIEC=0, BCC=1, BKL=2, DF=3, MEL=4, NV=5, VASC=6`). Custom column names default to index-based IDs.*
+
+---
+
+### 3. Python API
+
+Import classes directly into your code to programmatically build custom pipelines:
+
+```python
+from segment_toolkit import MaskToYoloConverter, YoloToMaskConverter
+
+# 1. Convert mask to YOLO label
+yolo_conv = MaskToYoloConverter(target_size=(640, 640), bbox_type="standard")
+yolo_conv.convert_single(
+    image_path="images/ISIC_0024310.jpg",
+    mask_path="mask/ISIC_0024310_segmentation.png",
+    output_txt_path="labels/ISIC_0024310.txt",
+    class_id=4
+)
+
+# 2. Batch convert a folder of masks with a JSON ground truth
+yolo_conv.convert_dataset(
+    images_dir="images",
+    masks_dir="mask",
+    output_labels_dir="labels",
+    ground_truth="GroundTruth.json"
+)
 ```
-YOLO Labels
-    ↓
-[Denormalize Coordinates]
-    ↓
-[Draw on Binary Masks]
-    ↓
-[Overlay on Original Images]
-    ↓
-[Visual Inspection]
-    ↓
-[Approve/Correct Annotations]
-```
 
+---
 
-## 📋 Pipeline Components
+## 🧠 Technical Details
 
-### `segment_with_preprocess_v2.ipynb`
+### Coordinate Conversion Math
 
-**Main Steps:**
-1. **Preprocessing** - Resize all images and masks to 640×640 RGB format
-2. **Segmentation** - Extract bounding boxes from masks using contour detection
-3. **Coordinate Transformation** - Convert from pixel to normalized YOLO coordinates
-4. **Multi-class Classification** - Map class IDs from `GroundTruth.csv`
-5. **Dataset Split** - Partition into training (80%) and test (20%) sets
-6. **YOLO Format Output** - Save labels in `.txt` files
+#### Bounding Box Center Calculation (Pixel Space)
+For standard bounding boxes, the pixel coordinates from `boundingRect` are $(x_{min}, y_{min}, w_{pixel}, h_{pixel})$.
+$$\text{Center } X \quad x_{center} = x_{min} + \frac{w_{pixel}}{2.0}$$
+$$\text{Center } Y \quad y_{center} = y_{min} + \frac{h_{pixel}}{2.0}$$
 
-**Key Functions:**
-- `preprocess_images()` - Standardize image sizes
-- `segment_img_yolo()` - Extract bounding box using minimum area rectangle
-- `copy_files()` - Organize files into train/test directories
+#### Coordinate Normalization (YOLO Format)
+All coordinates are normalized to the range $[0.0, 1.0]$:
+$$x_{norm} = \frac{x_{center}}{img\_width}, \quad y_{norm} = \frac{y_{center}}{img\_height}$$
+$$w_{norm} = \frac{w_{pixel}}{img\_width}, \quad h_{norm} = \frac{h_{pixel}}{img\_height}$$
 
-### `convert_label_to_mask.ipynb`
-
-**Main Classes:**
-- **PreProcessImage** - Converts YOLO labels to binary mask images
-  - `_create_mask_from_label()` - Draws rectangles for each bounding box
-  - `convert_label_to_mask()` - Batch processes all label files
-
-- **ShowImageRect** - Visualizes annotations
-  - `segmentImg()` - Extracts bounding box from mask using contour detection
-  - `show_image_with_mask()` - Displays image with overlay
-  - `processImages()` - Iterates through dataset for validation
-
-### Data Files
-
-- **GroundTruth.csv** - Multi-class labels mapping filenames to disease types
-  - Columns: Filename, MEL, NV, BCC, AKIEC, BKL, DF, VASC
-  - Binary indicators (1 = present, 0 = absent)
-
-- **data.yaml** - YOLO training configuration
-  - Specifies train/test paths
-  - Defines number of classes and class names
-
-## ⚠️ Important Notes & Best Practices
-
-### Coordinate System Understanding
-- **Normalized coordinates** are always in range [0, 1]
-- **Pixel coordinates** depend on image dimensions
-- Always verify image dimensions match between label generation and usage
-
-### Common Issues & Solutions
-
-| Issue | Cause | Solution |
-|-------|-------|----------|
-| Bounding boxes out of image bounds | Dimension mismatch | Verify img_width and img_height match actual images |
-| Empty masks generated | No valid contours | Check mask binary format and contrast |
-| Label format errors | Malformed YOLO lines | Check label file structure has exactly 5 values |
-| Class ID mismatch | GroundTruth.csv issues | Verify CSV has correct binary indicators |
-
-### Quality Checklist
-
-- ✅ Binary masks use proper contrast (0 = black, 255 = white)
-- ✅ Image dimensions are consistent (640×640 recommended)
-- ✅ Filenames match between images and masks (except extension)
-- ✅ YOLO coordinates are normalized [0, 1]
-- ✅ Label files have exactly 5 space-separated values per line
-- ✅ Class IDs match your dataset schema
-
-### Performance Tips
-
-- Use consistent image sizes (640×640 standard for YOLO)
-- Ensure sufficient contrast in binary masks
-- Pre-validate masks visually before processing
-- Use logging to identify problematic files
-- Process in batches for large datasets
+---
 
 ## 🧑‍💻 Author
-Zakria Gamal
-Computer Vision & AI Engineer
-🧠 LinkedIn https://www.linkedin.com/in/zkaria-gamal-82b486267/
+**Zakria Gamal**
+- Computer Vision & AI Engineer
+- 🧠 LinkedIn: [Zakria Gamal](https://www.linkedin.com/in/zkaria-gamal-82b486267/)
