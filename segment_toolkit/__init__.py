@@ -2,7 +2,7 @@
 Segment Toolkit: A library and CLI tool for converting binary segmentation masks to YOLO labels and vice versa.
 """
 
-__version__ = "1.0.3"
+__version__ = "1.1.0"
 
 import sys
 import subprocess

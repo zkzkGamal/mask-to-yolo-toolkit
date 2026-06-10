@@ -14,6 +14,7 @@ A modern, robust, and premium Python package designed to bridge the gap between 
 - **Dynamic Dataset Matching**: Read classification mappings (in CSV or JSON format) to automatically assign multi-class IDs matching standard dataset schemas (like the ISIC dataset).
 - **YOLO Dataset Splitting**: Automatically shuffles and partitions images and labels into training and testing sets with customizable split ratios, creating standard data.yaml configs.
 - **Overlay Visualizer**: Overlay bounding boxes and class indicators directly onto source images for annotation inspection.
+- **Mask Overlay Visualizer**: Overlay binary masks directly onto source images for quick inspection.
 - **Dual Interface**: Use as a command-line application (segment-toolkit) or import as a Python library (import segment_toolkit).
 
 ---
@@ -94,6 +95,15 @@ segment-toolkit visualize \
   --image images/ISIC_0024310.jpg \
   --label labels/ISIC_0024310.txt \
   --output visualization.png
+```
+
+#### Visualize Masks
+Draw a binary mask on top of the original image:
+```bash
+segment-toolkit visualize-mask \
+  --image images/ISIC_0024310.jpg \
+  --mask masks_reconstructed/ISIC_0024310_segmentation.png \
+  --output mask_visualization.png
 ```
 
 #### Split Dataset
@@ -197,6 +207,14 @@ yolo_conv.convert_dataset(
     masks_dir="mask",
     output_labels_dir="labels",
     ground_truth="GroundTruth.json"
+)
+
+# 3. Visualize a binary mask overlay
+mask_conv = YoloToMaskConverter(target_size=(640, 640))
+mask_conv.visualize_mask(
+    image_path="images/ISIC_0024310.jpg",
+    mask_path="masks_reconstructed/ISIC_0024310_segmentation.png",
+    output_image_path="mask_visualization.png",
 )
 ```
 

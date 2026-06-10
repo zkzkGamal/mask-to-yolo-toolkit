@@ -107,3 +107,28 @@ def test_conversions():
         reconstructed = cv2.imread(out_mask, cv2.IMREAD_GRAYSCALE)
         assert reconstructed[50, 50] == 255
         assert reconstructed[10, 10] == 0
+
+
+def test_visualize_mask():
+    """
+    Test mask overlay visualization.
+    """
+    with tempfile.TemporaryDirectory() as tmpdir:
+        img_path = os.path.join(tmpdir, "mock_img.jpg")
+        img = np.zeros((100, 100, 3), dtype=np.uint8)
+        cv2.imwrite(img_path, img)
+
+        mask_path = os.path.join(tmpdir, "mock_mask.png")
+        mask = np.zeros((100, 100), dtype=np.uint8)
+        mask[25:75, 25:75] = 255
+        cv2.imwrite(mask_path, mask)
+
+        out_vis = os.path.join(tmpdir, "mock_mask_vis.png")
+        converter = YoloToMaskConverter(target_size=(100, 100))
+        success = converter.visualize_mask(img_path, mask_path, out_vis)
+        assert success
+        assert os.path.exists(out_vis)
+
+        visualized = cv2.imread(out_vis, cv2.IMREAD_COLOR)
+        assert visualized[50, 50].any()
+        assert not visualized[10, 10].any()

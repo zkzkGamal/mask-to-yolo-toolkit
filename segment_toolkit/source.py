@@ -397,7 +397,8 @@ class MaskToYoloConverter:
 class YoloToMaskConverter:
     """
     Converts YOLO format bounding box label files back into binary segmentation masks.
-    Supports single file generation, batch directory conversion, and bbox overlay visualization.
+    Supports single file generation, batch directory conversion, bbox overlay visualization,
+    and mask overlay visualization.
     """
 
     def __init__(self, target_size: Tuple[int, int] = (640, 640)):
@@ -563,4 +564,48 @@ class YoloToMaskConverter:
 
         except Exception as e:
             logger.error(f"Error visualizing label {label_path}: {str(e)}")
+            return False
+
+    def visualize_mask(self, image_path: str, mask_path: str, output_image_path: str) -> bool:
+        """
+        Overlays a binary mask onto the original image.
+
+        Args:
+            image_path: Path to input image.
+            mask_path: Path to binary mask image.
+            output_image_path: Path to save the visualized image output.
+
+        Returns:
+            bool: True if success, False otherwise.
+        """
+        try:
+            image = safe_read_image(image_path)
+            resized_image = preprocess_image(image, self.target_size, is_mask=False)
+
+            if not os.path.exists(mask_path):
+                logger.warning(f"Mask file not found for visualization: {mask_path}")
+                return False
+
+            mask = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
+            if mask is None:
+                raise ValueError(f"Unable to read mask image: {mask_path}")
+
+            resized_mask = cv2.resize(
+                mask,
+                self.target_size,
+                interpolation=cv2.INTER_NEAREST,
+            )
+
+            mask_binary = resized_mask > 0
+            overlay = resized_image.copy()
+            overlay[mask_binary] = (0, 0, 255)
+            blended = cv2.addWeighted(overlay, 0.4, resized_image, 0.6, 0)
+
+            os.makedirs(os.path.dirname(os.path.abspath(output_image_path)), exist_ok=True)
+            cv2.imwrite(output_image_path, blended)
+            logger.info(f"Saved mask visualization overlay to: {output_image_path}")
+            return True
+
+        except Exception as e:
+            logger.error(f"Error visualizing mask {mask_path}: {str(e)}")
             return False

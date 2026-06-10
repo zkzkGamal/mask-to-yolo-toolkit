@@ -1,6 +1,6 @@
 """
 Command Line Interface (CLI) for segment_toolkit.
-Exposes mask-to-yolo, yolo-to-mask, split, and visualize commands.
+Exposes mask-to-yolo, yolo-to-mask, split, visualize, and visualize-mask commands.
 """
 
 import argparse
@@ -104,6 +104,22 @@ def parse_args(args: List[str]) -> argparse.Namespace:
         help="Resize image for visualization (default: 640 640).",
     )
 
+    # subcommand: visualize-mask
+    mask_vis_parser = subparsers.add_parser(
+        "visualize-mask", help="Overlay a binary mask onto the source image."
+    )
+    mask_vis_parser.add_argument("--image", type=str, required=True, help="Path to the source image.")
+    mask_vis_parser.add_argument("--mask", type=str, required=True, help="Path to the binary mask image.")
+    mask_vis_parser.add_argument("--output", type=str, required=True, help="Path to save output visualization image.")
+    mask_vis_parser.add_argument(
+        "--resize",
+        type=int,
+        nargs=2,
+        default=[640, 640],
+        metavar=("WIDTH", "HEIGHT"),
+        help="Resize image for visualization (default: 640 640).",
+    )
+
     return parser.parse_args(args)
 
 
@@ -179,6 +195,11 @@ def main(args: Optional[List[str]] = None) -> int:
         elif parsed.command == "visualize":
             converter = YoloToMaskConverter(target_size=(parsed.resize[0], parsed.resize[1]))
             success = converter.visualize_label(parsed.image, parsed.label, parsed.output)
+            return 0 if success else 1
+
+        elif parsed.command == "visualize-mask":
+            converter = YoloToMaskConverter(target_size=(parsed.resize[0], parsed.resize[1]))
+            success = converter.visualize_mask(parsed.image, parsed.mask, parsed.output)
             return 0 if success else 1
 
     except Exception as e:
