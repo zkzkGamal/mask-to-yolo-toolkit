@@ -1,9 +1,6 @@
 """
-Validation script for segment_toolkit.
-Runs the toolkit against sample images from ISIC and plant datasets, testing both CSV and JSON ground truths.
-Saves all output validation files under the 'validate_data' directory.
+This script performs end-to-end validation of the bounding box converter pipeline on ISIC skin lesion and plant disease sample datasets.
 """
-
 import os
 import sys
 import json

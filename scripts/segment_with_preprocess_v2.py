@@ -18,6 +18,10 @@
 # 7. **Dataset Split** - Partition into training and testing sets
 
 
+"""
+This script provides the standalone legacy forward pipeline to convert binary segmentation masks into YOLO bounding box labels.
+It handles image and mask preprocessing, bounding box extraction, class mapping, and dataset train/test splitting.
+"""
 import os , cv2 , shutil , random , pathlib
 from PIL import Image
 import pandas as pd

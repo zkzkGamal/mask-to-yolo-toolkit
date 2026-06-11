@@ -1,3 +1,6 @@
+"""
+This module contains unit tests for bounding box coordinate normalization, denormalization, contour calculation, and integration tests for MaskToYoloConverter and YoloToMaskConverter.
+"""
 import os
 import tempfile
 import pytest

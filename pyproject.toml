@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "segment_toolkit"
+version = "1.2.0"
+description = "A Python toolkit to convert between binary segmentation masks and YOLO labels"
+readme = "README.md"
+authors = [
+    { name = "Zakria Gamal", email = "zekogml11@gmail.com" }
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering :: Image Processing",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence"
+]
+requires-python = ">=3.7"
+dependencies = [
+    "numpy",
+    "opencv-python",
+    "pillow",
+    "pandas",
+    "matplotlib",
+    "typer[all]"
+]
+
+[project.urls]
+Homepage = "https://github.com/zkzkGamal/mask-to-yolo-toolkit"
+Issues = "https://github.com/zkzkGamal/mask-to-yolo-toolkit/issues"
+
+[project.scripts]
+segment-toolkit = "segment_toolkit.cli.main:app"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]

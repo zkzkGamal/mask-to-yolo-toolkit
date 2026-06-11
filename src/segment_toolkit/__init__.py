@@ -1,8 +1,12 @@
 """
-Segment Toolkit: A library and CLI tool for converting binary segmentation masks to YOLO labels and vice versa.
+This package initializes the Segment Toolkit and exposes all primary classes, transforms, and utility functions at the top level.
+It automatically checks and ensures that required external dependencies (numpy, opencv-python, pillow, pandas, matplotlib, typer) are installed.
+The components exposed in this package include:
+- Converters: BaseConverter, MaskToYoloConverter, YoloToMaskConverter, MaskToPolygonConverter, PolygonToMaskConverter
+- Transforms: BaseTransform, Compose, Resize, Normalize
+- Utilities: logger, safe_read_image, ensure_dir, get_largest_contour, calculate_bbox, normalize_coordinates, denormalize_coordinates, draw_bbox_on_image, compute_iou, compute_dice
 """
-
-__version__ = "1.1.0"
+from .__version__ import __version__
 
 import sys
 import subprocess
@@ -16,7 +20,8 @@ def _ensure_dependencies():
         "cv2": "opencv-python",
         "PIL": "pillow",
         "pandas": "pandas",
-        "matplotlib": "matplotlib"
+        "matplotlib": "matplotlib",
+        "typer": "typer[all]"
     }
     missing = []
     for module, pip_name in dependencies.items():
@@ -38,23 +43,51 @@ def _ensure_dependencies():
 # Check and install dependencies before importing other submodules
 _ensure_dependencies()
 
-from .source import MaskToYoloConverter, YoloToMaskConverter
-from .helpers import (
+from .core import (
+    BaseConverter,
+    MaskToYoloConverter,
+    YoloToMaskConverter,
+    MaskToPolygonConverter,
+    PolygonToMaskConverter,
+)
+from .transforms import (
+    BaseTransform,
+    Compose,
+    Resize,
+    Normalize,
+)
+from .utils import (
+    logger,
     safe_read_image,
-    preprocess_image,
+    ensure_dir,
     get_largest_contour,
     calculate_bbox,
     normalize_coordinates,
     denormalize_coordinates,
+    draw_bbox_on_image,
+    compute_iou,
+    compute_dice,
 )
 
 __all__ = [
+    "__version__",
+    "BaseConverter",
     "MaskToYoloConverter",
     "YoloToMaskConverter",
+    "MaskToPolygonConverter",
+    "PolygonToMaskConverter",
+    "BaseTransform",
+    "Compose",
+    "Resize",
+    "Normalize",
+    "logger",
     "safe_read_image",
-    "preprocess_image",
+    "ensure_dir",
     "get_largest_contour",
     "calculate_bbox",
     "normalize_coordinates",
     "denormalize_coordinates",
+    "draw_bbox_on_image",
+    "compute_iou",
+    "compute_dice",
 ]

@@ -17,6 +17,10 @@
 # 6. **Execute Pipeline** - Run conversion and visualization
 
 
+"""
+This script provides the standalone legacy conversion pipeline to translate YOLO bounding box label txt files back to binary masks.
+It defines PreProcessImage and ShowImageRect.
+"""
 import os
 import numpy as np
 from PIL import Image

@@ -1,41 +1,39 @@
 # Segment Toolkit
 
-A modern, robust, and premium Python package designed to bridge the gap between pixel-level binary segmentation masks and YOLO bounding box labels. It provides a bidirectional pipeline with exception handling, extensive logging, a command-line interface (CLI), and a Python API.
+A modern, robust, and premium Python package designed to bridge the gap between pixel-level binary/colored segmentation masks and YOLO labels. It provides a bidirectional pipeline for both standard **Bounding Boxes** (YOLO object detection) and **Polygon Coordinates** (YOLO instance segmentation format). 
+
+Equipped with a flexible image-mask transform pipeline, exception handling, extensive logging, a CLI, and a clean Python API.
 
 ---
 
 ## Features
 
-- **Bidirectional Conversion**:
-  - **Forward Pipeline**: Convert binary masks to YOLO format labels (supports standard axis-aligned or advanced minimum area rotated bounding boxes).
-  - **Reverse Pipeline**: Reconstruct binary masks from YOLO labels.
-- **Automatic Dependency Installer**: Missing required packages (numpy, opencv-python, pillow, pandas, matplotlib) are automatically detected and installed via pip upon package import or script execution.
-- **Robust Exception Handling**: Try-catch blocks wrapped around file I/O, contour finding, and resizing to prevent application crashes on corrupted or missing files.
-- **Dynamic Dataset Matching**: Read classification mappings (in CSV or JSON format) to automatically assign multi-class IDs matching standard dataset schemas (like the ISIC dataset).
-- **YOLO Dataset Splitting**: Automatically shuffles and partitions images and labels into training and testing sets with customizable split ratios, creating standard data.yaml configs.
-- **Overlay Visualizer**: Overlay bounding boxes and class indicators directly onto source images for annotation inspection.
-- **Mask Overlay Visualizer**: Overlay binary masks directly onto source images for quick inspection.
-- **Dual Interface**: Use as a command-line application (segment-toolkit) or import as a Python library (import segment_toolkit).
+- **Bidirectional Conversions**:
+  - **Bounding Boxes**: Convert binary masks to YOLO format labels (supports standard axis-aligned or advanced minimum area rotated bounding boxes) and vice versa.
+  - **Polygon Segmentation**: Convert binary or multi-class color-coded masks to YOLO instance segmentation polygon coordinates and vice versa.
+- **Transform Pipeline (`Compose`, `Resize`, `Normalize`)**: Jointly apply spatial and pixel transforms (like resizing and normalizations) on both images and masks.
+- **Robust Exception Handling**: Prevents crashes on corrupted, missing, or empty files.
+- **Dynamic Dataset Matching**: Parse Ground Truth CSV or JSON files (supports multiple indicator formats) to automatically map filenames to diagnostic class IDs (e.g. standard ISIC classes).
+- **YOLO Dataset Splitting**: Automatically partitions images and label files into standard `train` and `test` structures and generates the `data.yaml` configuration file.
+- **Visualization Overlays**: 
+  - Overlay bounding boxes onto source images.
+  - Blend masks onto source images.
+  - Render colored segmentation polygons with class tags onto source images.
+- **Dual Interface**: Use as a command-line application (`segment-toolkit`) or import as a Python library (`import segment_toolkit`).
 
 ---
 
 ## Installation
 
 ### 1. Standard Installation (via PyPI)
-To install the latest stable version of the package directly from PyPI:
-
 ```bash
 pip install segment-toolkit
 ```
 
-### 2. Local Installation (via Git Clone)
-If you want to clone the repository for local development, run:
-
+### 2. Local Development Installation
 ```bash
 # Clone the repository
 git clone https://github.com/zkzkGamal/mask-to-yolo-toolkit.git
-
-# Navigate into the project folder
 cd mask-to-yolo-toolkit
 
 # Install in editable mode
@@ -44,199 +42,191 @@ pip install -e .
 
 ---
 
-## Usage
+## Command Line Interface (CLI)
 
-### 1. Command Line Interface (CLI)
+The package installs a console script called `segment-toolkit`.
 
-The package installs a console script called segment-toolkit.
+### 1. Bounding Box Conversions
 
-#### Convert Masks to YOLO Labels
-- **Single File Conversion**:
-  ```bash
-  segment-toolkit mask-to-yolo \
-    --image images/ISIC_0024310.jpg \
-    --mask mask/ISIC_0024310_segmentation.png \
-    --output-txt labels/ISIC_0024310.txt \
-    --class-id 4
-  ```
+#### Convert Masks to YOLO Bounding Boxes
+```bash
+# Single File
+segment-toolkit mask-to-yolo \
+  --image images/sample.jpg \
+  --mask masks/sample.png \
+  --output-txt labels/sample.txt \
+  --class-id 4
 
-- **Batch Directory Conversion**:
-  ```bash
-  segment-toolkit mask-to-yolo \
-    --image-dir images/ \
-    --mask-dir mask/ \
-    --output-dir labels/ \
-    --ground-truth GroundTruth.csv
-  ```
+# Batch Directory
+segment-toolkit mask-to-yolo \
+  --image-dir images/ \
+  --mask-dir masks/ \
+  --output-dir labels/ \
+  --ground-truth GroundTruth.csv
+```
+*Options:*
+- `--rotated`: Use rotated minimum area rectangles (`cv2.minAreaRect`) instead of standard axis-aligned boxes.
+- `--resize WIDTH HEIGHT`: Set target size for resizing (default: 640 640).
 
-- **Options**:
-  - `--rotated`: Use rotated minimum area rectangles (cv2.minAreaRect) instead of standard axis-aligned rectangles.
-  - `--resize WIDTH HEIGHT`: Set target size for image and mask resizing (default: 640 640).
+#### Convert YOLO Bounding Boxes to Masks
+```bash
+# Single File
+segment-toolkit yolo-to-mask \
+  --label labels/sample.txt \
+  --output-mask reconstructed/sample.png
 
-#### Convert YOLO Labels to Masks
-- **Single File Conversion**:
-  ```bash
-  segment-toolkit yolo-to-mask \
-    --label labels/ISIC_0024310.txt \
-    --output-mask masks_reconstructed/ISIC_0024310_segmentation.png
-  ```
-
-- **Batch Directory Conversion**:
-  ```bash
-  segment-toolkit yolo-to-mask \
-    --label-dir labels/ \
-    --output-dir masks_reconstructed/
-  ```
+# Batch Directory
+segment-toolkit yolo-to-mask \
+  --label-dir labels/ \
+  --output-dir reconstructed/
+```
 
 #### Visualize Bounding Boxes
-Draw YOLO labels on top of the original image:
 ```bash
 segment-toolkit visualize \
-  --image images/ISIC_0024310.jpg \
-  --label labels/ISIC_0024310.txt \
+  --image images/sample.jpg \
+  --label labels/sample.txt \
   --output visualization.png
 ```
 
-#### Visualize Masks
-Draw a binary mask on top of the original image:
+---
+
+### 2. Polygon Segmentation Conversions
+
+#### Convert Masks to YOLO Polygon Labels
+Supports standard black-and-white masks or multi-class colored masks (requires passing a `--classes` JSON config mapping colors to class names).
 ```bash
-segment-toolkit visualize-mask \
-  --image images/ISIC_0024310.jpg \
-  --mask masks_reconstructed/ISIC_0024310_segmentation.png \
-  --output mask_visualization.png
+# Single binary mask
+segment-toolkit mask-to-polygon \
+  --image images/sample.jpg \
+  --mask masks/sample.png \
+  --output-txt labels/sample.txt \
+  --class-id 1
+
+# Batch directory of multi-class colored masks
+segment-toolkit mask-to-polygon \
+  --image-dir images/ \
+  --mask-dir masks/ \
+  --output-dir labels/ \
+  --classes classes.json
 ```
 
+#### Convert YOLO Polygons back to Masks
+```bash
+# Single file (creates color mask if classes.json is provided)
+segment-toolkit polygon-to-mask \
+  --label labels/sample.txt \
+  --output-mask reconstructed/sample.png \
+  --classes classes.json
+
+# Batch directory
+segment-toolkit polygon-to-mask \
+  --label-dir labels/ \
+  --output-dir reconstructed/
+```
+
+#### Visualize Polygon Segmentation
+```bash
+segment-toolkit visualize-polygon \
+  --image images/sample.jpg \
+  --label labels/sample.txt \
+  --output polygon_overlay.png \
+  --classes classes.json
+```
+
+---
+
+### 3. Dataset Utilities
+
 #### Split Dataset
-Organize folders into YOLO-compliant structure (dataset/train and dataset/test splits) and output data.yaml:
+Partitions image-label pairs into YOLO-compliant subfolders (`train/`, `test/`) and generates `data.yaml`:
 ```bash
 segment-toolkit split \
   --images images/ \
   --labels labels/ \
   --output dataset/ \
-  --ratio 0.8 \
-  --seed 42
+  --ratio 0.8
 ```
 
 ---
 
-## Validation and Demonstration Outputs
+## Validation Overlays
 
-To verify the library, we run automated validation on sample datasets. All validation output files (YOLO coordinates, reconstructed masks, and drawing overlays) are stored in the [validate_data/](file:///home/aloha-zkaria/LabelFile-for-yoloModel/validate_data) folder.
+To verify the pipeline, check out the visualization overlays generated by running the test suite under the `scripts/` folder:
 
-### Validation Overlays
+### Bounding Box Overlay (ISIC Skin Lesion)
+![ISIC Bounding Box Validation Overlay](assets/scratch_val_isic_vis.png)
 
-Here are the bounding box overlays generated by the toolkit visualizer:
+### Bounding Box Overlay (Plant Disease)
+![Plant Leaf Bounding Box Validation Overlay](assets/scratch_val_plant_vis.png)
 
-#### ISIC Melanoma Skin Lesion Validation
-[![ISIC Validation Overlay](assets/scratch_val_isic_vis.png)](assets/scratch_val_isic_vis.png)
+### Polygon Segmentation Overlay (ISIC Skin Lesion)
+![Polygon Segmentation Validation Overlay](assets/val_polygon_vis.png)
 
-#### Plant Leaf Disease Validation
-[![Plant Leaf Validation Overlay](assets/scratch_val_plant_vis.png)](assets/scratch_val_plant_vis.png)
-
-### Video Demonstration
-A video demonstrating installation, CLI commands, and programming API pipelines can be placed in the [demo/](file:///home/aloha-zkaria/LabelFile-for-yoloModel/demo) directory.
-
----
-
-## Ground Truth Formats
-
-The --ground-truth parameter in batch conversion supports both CSV and JSON formats.
-
-#### CSV Format
-Assumes the first column contains the image identifier/filename, and the subsequent columns represent binary indicator classes (where 1 indicates class presence).
-Example GroundTruth.csv:
-```csv
-image,MEL,NV,BCC,AKIEC,BKL,DF,VASC
-ISIC_0024306,0,1,0,0,0,0,0
-ISIC_0024310,1,0,0,0,0,0,0
-```
-
-#### JSON Format
-Supports three distinct schemas:
-
-1. **Flat Dictionary (Format A)**:
-   Maps image IDs directly to class integers or class name strings.
-   ```json
-   {
-     "ISIC_0024306": 5,
-     "ISIC_0024310": "MEL"
-   }
-   ```
-
-2. **Nested Indicators (Format B)**:
-   Maps image IDs to dictionaries of binary class indicators.
-   ```json
-   {
-     "ISIC_0024306": { "MEL": 0, "NV": 1, "BCC": 0 },
-     "ISIC_0024310": { "MEL": 1, "NV": 0, "BCC": 0 }
-   }
-   ```
-
-3. **List of Records (Format C)**:
-   A list of objects containing image IDs and class descriptors.
-   ```json
-   [
-     { "image": "ISIC_0024306", "class_id": 5 },
-     { "image": "ISIC_0024310", "MEL": 1, "NV": 0 }
-   ]
-   ```
-
-*Note: Class name strings (like "MEL", "NV") are automatically mapped to standard ISIC IDs (AKIEC=0, BCC=1, BKL=2, DF=3, MEL=4, NV=5, VASC=6). Custom column names default to index-based IDs.*
+### Reconstructed Mask Overlay (Multi-class Color Mask)
+![Multi-class Colored Mask Reconstruction](assets/mock_reconstructed_mask.png)
 
 ---
 
 ## Python API
 
-Import classes directly into your code to programmatically build custom pipelines:
+Programmatically build custom preprocessing and conversion pipelines:
 
 ```python
 from segment_toolkit import MaskToYoloConverter, YoloToMaskConverter
+from segment_toolkit import MaskToPolygonConverter, PolygonToMaskConverter
+from segment_toolkit.transforms import Compose, Resize, Normalize
 
-# 1. Convert mask to YOLO label
-yolo_conv = MaskToYoloConverter(target_size=(640, 640), bbox_type="standard")
-yolo_conv.convert_single(
-    image_path="images/ISIC_0024310.jpg",
-    mask_path="mask/ISIC_0024310_segmentation.png",
-    output_txt_path="labels/ISIC_0024310.txt",
-    class_id=4
+# 1. Image & Mask Joint Transforms Pipeline
+transform_pipeline = Compose([
+    Resize((640, 640)),
+    Normalize()
+])
+
+# 2. Bounding Box Converter
+bbox_converter = MaskToYoloConverter(target_size=(640, 640), bbox_type="rotated")
+bbox_converter.convert_single(
+    image_path="images/sample.jpg",
+    mask_path="masks/sample.png",
+    output_txt_path="labels/sample.txt",
+    class_id=0
 )
 
-# 2. Batch convert a folder of masks with a JSON ground truth
-yolo_conv.convert_dataset(
-    images_dir="images",
-    masks_dir="mask",
-    output_labels_dir="labels",
-    ground_truth="GroundTruth.json"
-)
-
-# 3. Visualize a binary mask overlay
-mask_conv = YoloToMaskConverter(target_size=(640, 640))
-mask_conv.visualize_mask(
-    image_path="images/ISIC_0024310.jpg",
-    mask_path="masks_reconstructed/ISIC_0024310_segmentation.png",
-    output_image_path="mask_visualization.png",
+# 3. Multi-class Colored Mask to Polygon Converter
+classes = [
+    ((255, 0, 0), "lesion_red"),
+    ((0, 255, 0), "lesion_green")
+]
+poly_converter = MaskToPolygonConverter(target_size=(640, 640))
+poly_converter.convert_single(
+    image_path="images/sample.jpg",
+    mask_path="masks/sample_colored.png",
+    output_txt_path="labels/sample_poly.txt",
+    classes=classes
 )
 ```
 
 ---
 
-## Technical Details
+## Ground Truth JSON Format Example
+To feed multi-class configurations to CLI commands using `--classes`, prepare a JSON file listing color lists and class names:
+```json
+[
+  [[255, 0, 0], "lesion_red"],
+  [[0, 255, 0], "lesion_green"]
+]
+```
 
-### Coordinate Conversion Math
+---
 
-#### Bounding Box Center Calculation (Pixel Space)
-For standard bounding boxes, the pixel coordinates from boundingRect are (xmin, ymin, w_pixel, h_pixel).
-$$\text{Center } X \quad x_{center} = x_{min} + \frac{w_{pixel}}{2.0}$$
-$$\text{Center } Y \quad y_{center} = y_{min} + \frac{h_{pixel}}{2.0}$$
+## License
 
-#### Coordinate Normalization (YOLO Format)
-All coordinates are normalized to the range [0.0, 1.0]:
-$$x_{norm} = \frac{x_{center}}{img\_width}, \quad y_{norm} = \frac{y_{center}}{img\_height}$$
-$$w_{norm} = \frac{w_{pixel}}{img\_width}, \quad h_{norm} = \frac{h_{pixel}}{img\_height}$$
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
 ## Author
+
 **Zakria Gamal**
 - Computer Vision and AI Engineer
 - LinkedIn: [Zakria Gamal](https://www.linkedin.com/in/zkaria-gamal-82b486267/)
